@@ -9,16 +9,16 @@ import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class IntegrationTests(@Autowired val restTemplate: TestRestTemplate) {
+class SecurityAccessTest(@Autowired val restTemplate: TestRestTemplate) {
 
     @Test
-    fun `test no security access`() {
+    fun unauthorizedAccessTest() {
         val entity = restTemplate.getForEntity<String>("/employee/test")
         assertThat(entity.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
     }
 
     @Test
-    fun `test basic auth access`() {
+    fun basicAuthAccessTest() {
         val entity = restTemplate.withBasicAuth("admin", "pass").getForEntity<String>("/employee/test")
         assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
     }

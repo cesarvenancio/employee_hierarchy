@@ -1,0 +1,3 @@
+INSERT INTO EMPLOYEE(id, name, supervisor_id) VALUES (9997, 'SUPERVISOR1', null);
+INSERT INTO EMPLOYEE(id, name, supervisor_id) VALUES (9998, 'SUPERVISOR2', 9997);
+INSERT INTO EMPLOYEE(id, name, supervisor_id) VALUES (9999, 'TEST_EMPLOYEE', 9998);

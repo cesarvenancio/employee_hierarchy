@@ -11,4 +11,9 @@ class EmployeeController {
         return "hello";
     }
 
+    @PostMapping("/processEmployeesHierarchy")
+    fun processHierarchy(@RequestBody hierarchyListRequest: HashMap<String, String>): HashMap<String, String> {
+        return hierarchyListRequest;
+    }
+
 }
