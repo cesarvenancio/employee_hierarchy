@@ -29,10 +29,13 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
         http.httpBasic()
                 .and()
                 .authorizeRequests()
+                .antMatchers("/h2-console/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/employee/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.POST, "/employee/**").hasRole("ADMIN")
                 .and()
                 .csrf().disable()
                 .formLogin().disable()
+
+        http.headers().frameOptions().sameOrigin();
     }
 }
