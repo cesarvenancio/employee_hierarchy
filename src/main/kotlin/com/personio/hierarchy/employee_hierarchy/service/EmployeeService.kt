@@ -1,5 +1,6 @@
 package com.personio.hierarchy.employee_hierarchy.service
 
+import com.personio.hierarchy.employee_hierarchy.exception.ResourceNotFoundException
 import com.personio.hierarchy.employee_hierarchy.model.entity.Employee
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeHierarchyResponse
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeNode
@@ -7,6 +8,7 @@ import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeSupervis
 import com.personio.hierarchy.employee_hierarchy.repository.EmployeeRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.transaction.Transactional
 
 @Service
 class EmployeeService @Autowired constructor(private val employeeRepository: EmployeeRepository){
@@ -81,6 +83,28 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         }
     }
 
+    @Transactional
+    fun saveEmployeeHierarchy(rootEmployeeNodeResponse: EmployeeNode?){
+        saveEmployee(rootEmployeeNodeResponse, null);
+    }
+
+    private fun saveEmployee(rootEmployeeNodeResponse: EmployeeNode?, supervisorId: Long?){
+
+        if(supervisorId == null){
+            employeeRepository.truncateTable()
+        }
+
+        if(rootEmployeeNodeResponse != null){
+            val employee: Employee = employeeRepository.save(Employee(null, rootEmployeeNodeResponse.name, supervisorId, null));
+
+            if(rootEmployeeNodeResponse.employees != null){
+                for (employeesNode in rootEmployeeNodeResponse.employees!!) {
+                    saveEmployee(employeesNode, employee.id);
+                }
+            }
+        }
+    }
+
     fun getEmployee(name:String): Employee?{
         return employeeRepository.findByName(name);
     }
@@ -92,6 +116,8 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
             var employeeSupervisorName: String = employee?.supervisor?.name ?: "";
             var supervisorOfSupervisorName: String = employee?.supervisor?.supervisor?.name ?: "";
             return EmployeeSupervisorsResponse(employee.name, employeeSupervisorName, supervisorOfSupervisorName);
+        }else{
+            throw ResourceNotFoundException("Employee not found $name");
         }
 
         return null;

@@ -1,5 +1,6 @@
 package com.personio.hierarchy.employee_hierarchy.controller
 
+import com.personio.hierarchy.employee_hierarchy.exception.ResourceNotFoundException
 import com.personio.hierarchy.employee_hierarchy.model.entity.Employee
 import com.personio.hierarchy.employee_hierarchy.model.request.EmployeeHierarchyRequest
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeHierarchyResponse
@@ -13,15 +14,13 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/employee")
 class EmployeeController @Autowired constructor(private val employeeService: EmployeeService){
 
-    @GetMapping("/test")
-    fun getTest(): String {
-        return "hello";
-    }
-
     @PostMapping("/processEmployeesHierarchy")
     fun processHierarchy(@RequestBody hierarchyListRequest: EmployeeHierarchyRequest): EmployeeHierarchyResponse {
 
         var response: EmployeeHierarchyResponse = employeeService.processHierarchy(hierarchyListRequest.employeesMap);
+
+        employeeService.saveEmployeeHierarchy(response.hierarchy);
+
 
         return response;
     }
@@ -29,6 +28,10 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
     @GetMapping("/{name}")
     fun getEmployeeByName(@PathVariable name:String): Employee? {
         var employee:Employee? = employeeService.getEmployee(name);
+
+        if(employee == null){
+            throw ResourceNotFoundException("Employee not found $name");
+        }
 
         return employee;
     }
