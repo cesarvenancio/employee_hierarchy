@@ -1,0 +1,22 @@
+{
+  "Pete": "Nick",
+  "Barbara": "Nick",
+  "Nick": "Sophie",
+  "Sophie": "Jonas",
+  "Agata" : "Sophie",
+  "Joel" : "Agata",
+  "Manoel" : "Joel",
+  "Soares" : "Jonas",
+  "Vitor" : "Soares",
+  "Jonas": "Luis",
+  "Jose" : "Luis",
+  "Luis" : "Tomas",
+  "Carla" : "Tomas",
+  "Miguel" : "Tomas",
+  "Lorena" : "Carla",
+  "Margot" : "Lorena",
+  "Amanda" : "Miguel",
+  "Leticia" : "Amanda",
+  "Tomas" : "Big Boss",
+  "Raquel" : "Amanda"
+}

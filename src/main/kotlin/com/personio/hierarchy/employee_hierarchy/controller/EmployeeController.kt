@@ -1,6 +1,9 @@
 package com.personio.hierarchy.employee_hierarchy.controller
 
 import com.personio.hierarchy.employee_hierarchy.model.entity.Employee
+import com.personio.hierarchy.employee_hierarchy.model.request.EmployeeHierarchyRequest
+import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeHierarchyResponse
+import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeNode
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeSupervisorsResponse
 import com.personio.hierarchy.employee_hierarchy.service.EmployeeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,8 +19,11 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
     }
 
     @PostMapping("/processEmployeesHierarchy")
-    fun processHierarchy(@RequestBody hierarchyListRequest: HashMap<String, String>): HashMap<String, String> {
-        return hierarchyListRequest;
+    fun processHierarchy(@RequestBody hierarchyListRequest: EmployeeHierarchyRequest): EmployeeNode? {
+
+        var response: EmployeeHierarchyResponse = employeeService.processHierarchy(hierarchyListRequest.employeesMap);
+
+        return response.hierarchy;
     }
 
     @GetMapping("/{name}")

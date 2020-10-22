@@ -12,8 +12,8 @@ import org.springframework.test.context.jdbc.SqlGroup
 class EmployeeRepositoryTest(@Autowired val employeeRepository: EmployeeRepository) {
 
     @SqlGroup(
-            Sql(scripts = arrayOf("classpath:data/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-            Sql(scripts = arrayOf("classpath:data/delete_employees.sql"), executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD))
+            Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+            Sql(scripts = arrayOf("classpath:data/sql/delete_employees.sql"), executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD))
     @Test
     fun testGetEmployee() {
         val employee: Employee? = employeeRepository.findByName("TEST_EMPLOYEE");
