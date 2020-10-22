@@ -19,11 +19,11 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
     }
 
     @PostMapping("/processEmployeesHierarchy")
-    fun processHierarchy(@RequestBody hierarchyListRequest: EmployeeHierarchyRequest): EmployeeNode? {
+    fun processHierarchy(@RequestBody hierarchyListRequest: EmployeeHierarchyRequest): EmployeeHierarchyResponse {
 
         var response: EmployeeHierarchyResponse = employeeService.processHierarchy(hierarchyListRequest.employeesMap);
 
-        return response.hierarchy;
+        return response;
     }
 
     @GetMapping("/{name}")

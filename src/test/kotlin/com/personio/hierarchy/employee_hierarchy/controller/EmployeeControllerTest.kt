@@ -1,6 +1,7 @@
 package com.personio.hierarchy.employee_hierarchy.controller
 
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,8 +15,9 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class EmployeeControllerTest(@Autowired val restTemplate: TestRestTemplate) {
+class EmployeeControllerTest(@Autowired var restTemplate: TestRestTemplate) {
 
     val simpleFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/simpleHierarchy.json").toURI());
     val simpleFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/simpleHierarchy.json").toURI());
@@ -23,17 +25,26 @@ class EmployeeControllerTest(@Autowired val restTemplate: TestRestTemplate) {
     val complexFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/complexHierarchy.json").toURI());
     val complexFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/complexHierarchy.json").toURI());
 
+    val cyclicFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/cyclicHierarchy.json").toURI());
+    val cyclicFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/cyclicHierarchy.json").toURI());
+
+    val duplicateReferenceSupervisorFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/duplicateEmployeeReferenceToSupervisor.json").toURI());
+    val duplicateReferenceSupervisorFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/duplicateEmployeeReferenceToSupervisor.json").toURI());
+
+    //TODO: Before all not working?
+    @BeforeEach
+    fun initAll() {
+        restTemplate = restTemplate.withBasicAuth("admin", "pass")
+    }
+
     @Test
-    fun simpleHierarchy() {
+    fun simpleHierarchyTest() {
 
         val payloadBody: String = buildStringFromJsonFile(simpleFileRequestPath)
 
-        val headers: HttpHeaders = HttpHeaders ()
-        headers.contentType = MediaType.APPLICATION_JSON
+        val request = buildJsonStringRequestBody(payloadBody);
 
-        val request = HttpEntity<String>(payloadBody, headers)
-
-        val entity = restTemplate.withBasicAuth("admin", "pass").postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
 
         val payloadResponse: String = buildStringFromJsonFile(simpleFileResponsePath)
 
@@ -42,18 +53,45 @@ class EmployeeControllerTest(@Autowired val restTemplate: TestRestTemplate) {
     }
 
     @Test
-    fun complexHierarchy() {
+    fun complexHierarchyTest() {
 
         val payloadBody: String = buildStringFromJsonFile(complexFileRequestPath)
 
-        val headers: HttpHeaders = HttpHeaders ()
-        headers.contentType = MediaType.APPLICATION_JSON
+        val request = buildJsonStringRequestBody(payloadBody);
 
-        val request = HttpEntity<String>(payloadBody, headers)
-
-        val entity = restTemplate.withBasicAuth("admin", "pass").postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
 
         val payloadResponse: String = buildStringFromJsonFile(complexFileResponsePath)
+
+        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
+    }
+
+    @Test
+    fun cyclicDependencyHierarchyTest() {
+
+        val payloadBody: String = buildStringFromJsonFile(cyclicFileRequestPath)
+
+        val request = buildJsonStringRequestBody(payloadBody);
+
+        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+
+        val payloadResponse: String = buildStringFromJsonFile(cyclicFileResponsePath)
+
+        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
+    }
+
+    @Test
+    fun duplicateReferenceToSupervisorHierarchyTest() {
+
+        val payloadBody: String = buildStringFromJsonFile(duplicateReferenceSupervisorFileRequestPath)
+
+        val request = buildJsonStringRequestBody(payloadBody);
+
+        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+
+        val payloadResponse: String = buildStringFromJsonFile(duplicateReferenceSupervisorFileResponsePath)
 
         Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
@@ -63,6 +101,13 @@ class EmployeeControllerTest(@Autowired val restTemplate: TestRestTemplate) {
         return Files.lines(pathFile)
                 .parallel()
                 .collect(Collectors.joining())
+    }
+
+    private fun buildJsonStringRequestBody(payloadBody: String): HttpEntity<String>{
+        val headers: HttpHeaders = HttpHeaders ()
+        headers.contentType = MediaType.APPLICATION_JSON
+
+        return HttpEntity<String>(payloadBody, headers)
     }
 
 }

@@ -16,6 +16,8 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
 
         var rootEmployeeNode: EmployeeNode? = null;
 
+        validateHierarchy(employeeHierarchyMap, response);
+
         for ((employeeName, supervisorListName) in employeeHierarchyMap) {
 
             val supervisorName = supervisorListName.removeAt(0);
@@ -28,8 +30,13 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
                 var supervisor: EmployeeNode? = rootEmployeeNode.findEmployeeWithValue(supervisorName);
                 var employee: EmployeeNode? = rootEmployeeNode.findEmployeeWithValue(employeeName);
 
+                if(employee == rootEmployeeNode && supervisor != null){
+                    response.validationMessages?.add("Cyclic dependency between supervisor $supervisorName and employee $employeeName")
+                    continue;
+                }
+
                 if(supervisor == null && employee != rootEmployeeNode){
-                    //TODO MESSAGE INDEPENDENT ROOT
+                    response.validationMessages?.add("Could not link $supervisorName to employee $employeeName independent root")
                 }else if(supervisor == null && employee == rootEmployeeNode){
                     supervisor = EmployeeNode(supervisorName, null, arrayListOf<EmployeeNode>());
                     supervisor.employees?.add(employee);
@@ -44,6 +51,34 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         response.hierarchy = rootEmployeeNode;
 
         return  response;
+    }
+
+    fun validateHierarchy(employeeHierarchyMap: LinkedHashMap<String, MutableList<String>>, response: EmployeeHierarchyResponse) {
+
+        for ((employeeName, supervisorListName) in employeeHierarchyMap) {
+
+            val supervisorName = supervisorListName[0]
+
+            if (supervisorListName.size > 1) {
+                for (supervisors in supervisorListName) {
+                    if(supervisors == supervisorName) continue;
+                    response.validationMessages?.add(
+                            "Could not link the employee " +
+                                    "$employeeName to supervisor $supervisors, employee already linked to supervisor $supervisorName"
+                    )
+                }
+            }
+
+            if (employeeName == supervisorName) {
+                response.validationMessages?.add("Employee and supervisor have the same name - $supervisorName")
+                employeeHierarchyMap.remove(employeeName);
+            }
+
+            if (supervisorName == "") {
+                response.validationMessages?.add("Empty value for supervisor in employee - $employeeName")
+                employeeHierarchyMap.remove(employeeName);
+            }
+        }
     }
 
     fun getEmployee(name:String): Employee?{

@@ -1,0 +1,1 @@
+{"hierarchy":{"Jonas":[{"Sophie":[{"Nick":[{"Pete":[]},{"Barbara":[]}]}]}]},"validationMessages":["Cyclic dependency between supervisor Pete and employee Jonas"]}

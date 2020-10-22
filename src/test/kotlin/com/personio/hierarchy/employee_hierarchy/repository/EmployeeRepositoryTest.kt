@@ -15,7 +15,7 @@ class EmployeeRepositoryTest(@Autowired val employeeRepository: EmployeeReposito
             Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
             Sql(scripts = arrayOf("classpath:data/sql/delete_employees.sql"), executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD))
     @Test
-    fun testGetEmployee() {
+    fun getEmployeeTest() {
         val employee: Employee? = employeeRepository.findByName("TEST_EMPLOYEE");
         Assertions.assertNotNull(employee);
         Assertions.assertEquals("TEST_EMPLOYEE", employee?.name);
