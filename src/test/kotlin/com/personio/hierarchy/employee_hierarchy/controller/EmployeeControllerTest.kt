@@ -39,7 +39,8 @@ class EmployeeControllerTest(@Autowired var restTemplate: TestRestTemplate) {
 
     val getEmployeeSupervisorFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/getEmployeeSupervisor.json").toURI());
 
-    //TODO: Before all not working?
+    val badFormatFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/badFormat.json").toURI());
+
     @BeforeEach
     fun initAll() {
         restTemplate = restTemplate.withBasicAuth("admin", "pass")
@@ -157,6 +158,19 @@ class EmployeeControllerTest(@Autowired var restTemplate: TestRestTemplate) {
         Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(actualObj.get("message").textValue()).isEqualTo("Resource Not Found");
         Assertions.assertThat(actualObj.get("errors")[0].textValue()).isEqualTo("Employee not found TET_EMPLOYEE");
+    }
+
+    @Test
+    fun badFormatRequestTest() {
+
+        val payloadBody: String = buildStringFromJsonFile(badFormatFileRequestPath)
+
+        val request = buildJsonStringRequestBody(payloadBody);
+
+        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+
+        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(entity.body).isEqualTo("Invalid JSON Format");
     }
 
     private fun buildStringFromJsonFile(pathFile: Path): String{
