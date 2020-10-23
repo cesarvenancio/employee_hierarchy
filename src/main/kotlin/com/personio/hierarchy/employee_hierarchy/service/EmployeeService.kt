@@ -85,13 +85,13 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
 
     @Transactional
     fun saveEmployeeHierarchy(rootEmployeeNodeResponse: EmployeeNode?){
-        saveEmployee(rootEmployeeNodeResponse, null);
+        saveEmployeeNode(rootEmployeeNodeResponse, null);
     }
 
-    private fun saveEmployee(rootEmployeeNodeResponse: EmployeeNode?, supervisorId: Long?){
+    private fun saveEmployeeNode(rootEmployeeNodeResponse: EmployeeNode?, supervisorId: Long?){
 
         if(supervisorId == null){
-            employeeRepository.truncateTable()
+            employeeRepository.truncateEmployeeTable()
         }
 
         if(rootEmployeeNodeResponse != null){
@@ -99,7 +99,7 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
 
             if(rootEmployeeNodeResponse.employees != null){
                 for (employeesNode in rootEmployeeNodeResponse.employees!!) {
-                    saveEmployee(employeesNode, employee.id);
+                    saveEmployeeNode(employeesNode, employee.id);
                 }
             }
         }

@@ -14,13 +14,17 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/employee")
 class EmployeeController @Autowired constructor(private val employeeService: EmployeeService){
 
+    @GetMapping("/test")
+    fun getTest(): String {
+        return "hello";
+    }
+
     @PostMapping("/processEmployeesHierarchy")
     fun processHierarchy(@RequestBody hierarchyListRequest: EmployeeHierarchyRequest): EmployeeHierarchyResponse {
 
         var response: EmployeeHierarchyResponse = employeeService.processHierarchy(hierarchyListRequest.employeesMap);
 
         employeeService.saveEmployeeHierarchy(response.hierarchy);
-
 
         return response;
     }

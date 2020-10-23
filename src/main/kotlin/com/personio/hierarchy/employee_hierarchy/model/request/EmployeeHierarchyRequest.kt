@@ -6,7 +6,7 @@ import java.util.LinkedHashMap
 
 class EmployeeHierarchyRequest {
 
-    val employeesMap: LinkedHashMap<String, MutableList<String>> = LinkedHashMap()
+    var employeesMap: LinkedHashMap<String, MutableList<String>> = LinkedHashMap()
 
     @JsonAnySetter
     fun duplicateKeyValues(key: String, value: String) {

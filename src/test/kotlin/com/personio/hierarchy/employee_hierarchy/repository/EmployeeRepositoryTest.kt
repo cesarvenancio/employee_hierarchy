@@ -25,4 +25,16 @@ class EmployeeRepositoryTest(@Autowired val employeeRepository: EmployeeReposito
         Assertions.assertEquals("SUPERVISOR1", employee?.supervisor?.supervisor?.name);
     }
 
+    @Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    fun truncateEmployeeTableTest() {
+        val employeeResults: MutableIterable<Employee> = employeeRepository.findAll()
+
+        Assertions.assertEquals(3, employeeResults.count());
+        employeeRepository.truncateEmployeeTable();
+
+        val emptyEmployeeResults: MutableIterable<Employee> = employeeRepository.findAll()
+        Assertions.assertEquals(0, emptyEmployeeResults.count());
+    }
+
 }
