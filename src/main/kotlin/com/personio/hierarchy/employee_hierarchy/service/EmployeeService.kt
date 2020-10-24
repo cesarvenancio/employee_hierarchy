@@ -13,6 +13,7 @@ import javax.transaction.Transactional
 @Service
 class EmployeeService @Autowired constructor(private val employeeRepository: EmployeeRepository){
 
+    @Transactional
     fun processHierarchy(employeeHierarchyMap: LinkedHashMap<String, MutableList<String>>): EmployeeHierarchyResponse {
         var response: EmployeeHierarchyResponse = EmployeeHierarchyResponse();
 
@@ -51,6 +52,8 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         }
 
         response.hierarchy = rootEmployeeNode;
+
+        saveEmployeeHierarchy(response.hierarchy);
 
         return  response;
     }
@@ -95,7 +98,7 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         }
 
         if(rootEmployeeNodeResponse != null){
-            val employee: Employee = employeeRepository.save(Employee(null, rootEmployeeNodeResponse.name, supervisorId, null));
+            val employee: Employee = employeeRepository.save(Employee(null, rootEmployeeNodeResponse.name, supervisorId));
 
             if(rootEmployeeNodeResponse.employees != null){
                 for (employeesNode in rootEmployeeNodeResponse.employees!!) {
@@ -106,16 +109,18 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
     }
 
     fun getEmployee(name:String): Employee?{
-        return employeeRepository.findByName(name);
+
+        var employee: Employee? =  employeeRepository.findByName(name);
+
+        return employee;
     }
 
     fun getEmployeeSupervisors(name:String): EmployeeSupervisorsResponse? {
 
-        var employee: Employee? = getEmployee(name);
+        var employee: EmployeeSupervisorsResponse? = employeeRepository.findSupervisorsByEmployeeName(name);
+
         if(employee != null){
-            var employeeSupervisorName: String = employee?.supervisor?.name ?: "";
-            var supervisorOfSupervisorName: String = employee?.supervisor?.supervisor?.name ?: "";
-            return EmployeeSupervisorsResponse(employee.name, employeeSupervisorName, supervisorOfSupervisorName);
+            return employee;
         }else{
             throw ResourceNotFoundException("Employee not found $name");
         }

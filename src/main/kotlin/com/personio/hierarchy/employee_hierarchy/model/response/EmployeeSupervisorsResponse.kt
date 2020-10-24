@@ -1,3 +1,7 @@
 package com.personio.hierarchy.employee_hierarchy.model.response
 
-data class EmployeeSupervisorsResponse(var employee: String, var supervisor: String, var supervisorOfSupervisor: String)
+interface EmployeeSupervisorsResponse{
+    val employee: String
+    val supervisor: String
+    val supervisorOfSupervisor: String
+}

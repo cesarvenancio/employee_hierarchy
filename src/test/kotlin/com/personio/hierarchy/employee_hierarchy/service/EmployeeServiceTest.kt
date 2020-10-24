@@ -21,7 +21,7 @@ class EmployeeServiceTest(@Autowired val employeeService: EmployeeService) {
         val employee: Employee? = employeeService.getEmployee("TEST_EMPLOYEE");
         Assertions.assertNotNull(employee);
         Assertions.assertEquals("TEST_EMPLOYEE", employee?.name);
-        Assertions.assertEquals("SUPERVISOR2", employee?.supervisor?.name);
+        Assertions.assertEquals(9998, employee?.supervisorId);
     }
 
     @SqlGroup(
@@ -47,7 +47,7 @@ class EmployeeServiceTest(@Autowired val employeeService: EmployeeService) {
         employee = employeeService.getEmployee("TEST_EMPLOYEE");
         Assertions.assertNotNull(employee);
         Assertions.assertEquals("TEST_EMPLOYEE", employee?.name);
-        Assertions.assertEquals("SUPERVISOR1", employee?.supervisor?.name);
+        Assertions.assertEquals(1, employee?.supervisorId);
     }
 
     private fun getEmployeeHierarchyRootTest(): EmployeeNode?{

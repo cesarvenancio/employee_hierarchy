@@ -1,1 +1,1 @@
-{"id":9999,"name":"TEST_EMPLOYEE","supervisorId":9998,"supervisor":{"id":9998,"name":"SUPERVISOR2","supervisorId":9997,"supervisor":{"id":9997,"name":"SUPERVISOR1","supervisorId":null,"supervisor":null}}}
+{"id":9999,"name":"TEST_EMPLOYEE","supervisorId":9998}

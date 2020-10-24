@@ -8,9 +8,9 @@ data class Employee(
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO)
         var id: Long? = 0,
+
         var name: String = "",
+
         @Column(name = "supervisor_id")
-        var supervisorId: Long? = null,
-        @ManyToOne @JoinColumn(name="supervisor_id", insertable = false, updatable = false)
-        var supervisor: Employee?
+        var supervisorId: Long? = null
 )

@@ -19,10 +19,8 @@ class EmployeeRepositoryTest(@Autowired val employeeRepository: EmployeeReposito
         val employee: Employee? = employeeRepository.findByName("TEST_EMPLOYEE");
         Assertions.assertNotNull(employee);
         Assertions.assertEquals("TEST_EMPLOYEE", employee?.name);
-        Assertions.assertNotNull(employee?.supervisor);
-        Assertions.assertEquals("SUPERVISOR2", employee?.supervisor?.name);
-        Assertions.assertNotNull(employee?.supervisor?.supervisor);
-        Assertions.assertEquals("SUPERVISOR1", employee?.supervisor?.supervisor?.name);
+        Assertions.assertNotNull(employee?.supervisorId);
+        Assertions.assertEquals(9998, employee?.supervisorId);
     }
 
     @Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)

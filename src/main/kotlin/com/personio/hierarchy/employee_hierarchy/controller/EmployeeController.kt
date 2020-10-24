@@ -18,8 +18,6 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
 
         var response: EmployeeHierarchyResponse = employeeService.processHierarchy(hierarchyListRequest.employeesMap);
 
-        employeeService.saveEmployeeHierarchy(response.hierarchy);
-
         return response;
     }
 
@@ -27,16 +25,23 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
     fun getEmployeeByName(@PathVariable name:String): Employee? {
         var employee:Employee? = employeeService.getEmployee(name);
 
-        if(employee == null){
+        if(employee != null){
+            return employee;
+        }else{
             throw ResourceNotFoundException("Employee not found $name");
         }
-
-        return employee;
     }
 
     @GetMapping("/{name}/supervisor")
     fun getEmployeeSupervisorsByName(@PathVariable name:String): EmployeeSupervisorsResponse? {
-        return employeeService.getEmployeeSupervisors(name);
+
+        var employeeSupervisors:EmployeeSupervisorsResponse? = employeeService.getEmployeeSupervisors(name);
+
+        if(employeeSupervisors != null){
+            return employeeSupervisors;
+        }else{
+            throw ResourceNotFoundException("Employee not found $name");
+        }
     }
 
 }
