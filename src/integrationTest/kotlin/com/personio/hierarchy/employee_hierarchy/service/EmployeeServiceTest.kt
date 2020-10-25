@@ -47,7 +47,6 @@ class EmployeeServiceTest(@Autowired val employeeService: EmployeeService) {
         employee = employeeService.getEmployeeByName("TEST_EMPLOYEE");
         Assertions.assertNotNull(employee);
         Assertions.assertEquals("TEST_EMPLOYEE", employee?.name);
-        Assertions.assertEquals(1, employee?.supervisorId);
     }
 
     private fun getEmployeeHierarchyRootTest(): EmployeeNode?{
