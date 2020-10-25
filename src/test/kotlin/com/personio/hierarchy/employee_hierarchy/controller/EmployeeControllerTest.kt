@@ -1,189 +1,101 @@
 package com.personio.hierarchy.employee_hierarchy.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.BeforeEach
+import com.personio.hierarchy.employee_hierarchy.exception.ResourceNotFoundException
+import com.personio.hierarchy.employee_hierarchy.model.entity.Employee
+import com.personio.hierarchy.employee_hierarchy.model.request.EmployeeHierarchyRequest
+import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeHierarchyResponse
+import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeNode
+import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeSupervisorsResponse
+import com.personio.hierarchy.employee_hierarchy.service.EmployeeService
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.client.getForEntity
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.test.context.jdbc.Sql
-import org.springframework.test.context.jdbc.SqlGroup
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.stream.Collectors
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito
+import java.util.LinkedHashMap
 
+class EmployeeControllerTest() {
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class EmployeeControllerTest(@Autowired var restTemplate: TestRestTemplate) {
-
-    val simpleFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/simpleHierarchy.json").toURI());
-    val simpleFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/simpleHierarchy.json").toURI());
-
-    val complexFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/complexHierarchy.json").toURI());
-    val complexFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/complexHierarchy.json").toURI());
-
-    val cyclicFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/cyclicHierarchy.json").toURI());
-    val cyclicFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/cyclicHierarchy.json").toURI());
-
-    val duplicateReferenceSupervisorFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/duplicateEmployeeReferenceToSupervisor.json").toURI());
-    val duplicateReferenceSupervisorFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/duplicateEmployeeReferenceToSupervisor.json").toURI());
-
-    val getEmployeeFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/getEmployee.json").toURI());
-
-    val getEmployeeSupervisorFileResponsePath: Path = Paths.get(this.javaClass.getResource("/hierarchies/response/getEmployeeSupervisor.json").toURI());
-
-    val badFormatFileRequestPath: Path = Paths.get(this.javaClass.getResource("/hierarchies/request/badFormat.json").toURI());
-
-    @BeforeEach
-    fun initAll() {
-        restTemplate = restTemplate.withBasicAuth("admin", "pass")
-    }
+    private val employeeService: EmployeeService = Mockito.mock(EmployeeService::class.java)
+    private val employeeController: EmployeeController = EmployeeController(employeeService)
 
     @Test
-    fun simpleHierarchyTest() {
+    fun processHierarchyTest() {
 
-        val payloadBody: String = buildStringFromJsonFile(simpleFileRequestPath)
+        val employeeHierarchy:EmployeeHierarchyResponse = EmployeeHierarchyResponse()
+        employeeHierarchy.hierarchy = EmployeeNode("Sophie", null, arrayListOf())
 
-        val request = buildJsonStringRequestBody(payloadBody);
+        given(employeeService.processHierarchy(LinkedHashMap())).willReturn(employeeHierarchy);
 
-        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
+        val employeeHierarchyResponse = employeeController.processHierarchy(getEmployeeHierarchyRequest())
 
-        val payloadResponse: String = buildStringFromJsonFile(simpleFileResponsePath)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
+        Assertions.assertNotNull(employeeHierarchyResponse)
+        Assertions.assertEquals(employeeHierarchyResponse.hierarchy?.name, "Sophie")
+        Mockito.verify(employeeService, Mockito.times(1)).processHierarchy(LinkedHashMap())
+        Mockito.verifyNoMoreInteractions(employeeService)
     }
 
-    @Test
-    fun complexHierarchyTest() {
-
-        val payloadBody: String = buildStringFromJsonFile(complexFileRequestPath)
-
-        val request = buildJsonStringRequestBody(payloadBody);
-
-        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
-
-        val payloadResponse: String = buildStringFromJsonFile(complexFileResponsePath)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
-    }
-
-    @Test
-    fun cyclicDependencyHierarchyTest() {
-
-        val payloadBody: String = buildStringFromJsonFile(cyclicFileRequestPath)
-
-        val request = buildJsonStringRequestBody(payloadBody);
-
-        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
-
-        val payloadResponse: String = buildStringFromJsonFile(cyclicFileResponsePath)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
-    }
-
-    @Test
-    fun duplicateReferenceToSupervisorHierarchyTest() {
-
-        val payloadBody: String = buildStringFromJsonFile(duplicateReferenceSupervisorFileRequestPath)
-
-        val request = buildJsonStringRequestBody(payloadBody);
-
-        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
-
-        val payloadResponse: String = buildStringFromJsonFile(duplicateReferenceSupervisorFileResponsePath)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
-    }
-
-    @SqlGroup(
-            Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-            Sql(scripts = arrayOf("classpath:data/sql/delete_employees.sql"), executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD))
     @Test
     fun getEmployeeByNameTest() {
+        val employee: Employee? = Employee(1, "TEST", null)
 
-        val entity = restTemplate.getForEntity<String>("/employee/TEST_EMPLOYEE")
+        given(employeeService.getEmployeeByName("TEST")).willReturn(employee);
 
-        val payloadResponse: String = buildStringFromJsonFile(getEmployeeFileResponsePath)
+        val employeeResponse: Employee? = employeeController.getEmployeeByName("TEST");
 
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
+        Assertions.assertNotNull(employeeResponse)
+        Assertions.assertEquals(employeeResponse?.name, "TEST")
+        Mockito.verify(employeeService, Mockito.times(1)).getEmployeeByName("TEST")
+        Mockito.verifyNoMoreInteractions(employeeService)
     }
 
     @Test
-    fun getEmployeeNotFoundTest() {
+    fun getEmployeeByNameNotFoundTest() {
 
-        val entity = restTemplate.getForEntity<String>("/employee/TET_EMPLOYEE")
+        given(employeeService.getEmployeeByName("NOT_FOUND_EMPLOYEE")).willReturn(null);
 
-        val mapper = ObjectMapper()
-        val actualObj = mapper.readTree(entity.body)
+        val exceptionResponse = assertThrows(ResourceNotFoundException::class.java) {
+            employeeController.getEmployeeByName("NOT_FOUND_EMPLOYEE");
+        }
 
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.NOT_FOUND);
-        Assertions.assertThat(actualObj.get("message").textValue()).isEqualTo("Resource Not Found");
-        Assertions.assertThat(actualObj.get("errors")[0].textValue()).isEqualTo("Employee not found TET_EMPLOYEE");
-    }
-
-    @SqlGroup(
-            Sql(scripts = arrayOf("classpath:data/sql/insert_employees.sql"), executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
-            Sql(scripts = arrayOf("classpath:data/sql/delete_employees.sql"), executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD))
-    @Test
-    fun getEmployeeSupervisorTest() {
-
-        val entity = restTemplate.getForEntity<String>("/employee/TEST_EMPLOYEE/supervisor")
-
-        val payloadResponse: String = buildStringFromJsonFile(getEmployeeSupervisorFileResponsePath)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(entity.body).isEqualTo(payloadResponse);
+        Assertions.assertEquals("Employee not found NOT_FOUND_EMPLOYEE", exceptionResponse.message)
+        Mockito.verify(employeeService, Mockito.times(1)).getEmployeeByName("NOT_FOUND_EMPLOYEE")
+        Mockito.verifyNoMoreInteractions(employeeService)
     }
 
     @Test
-    fun getEmployeeSupervisorNotFoundTest() {
+    fun getEmployeeSupervisorsByNameTest() {
+        val employeeSupervisors: EmployeeSupervisorsResponse? = Mockito.mock(EmployeeSupervisorsResponse::class.java)
 
-        val entity = restTemplate.getForEntity<String>("/employee/TET_EMPLOYEE/supervisor")
+        given(employeeService.getEmployeeSupervisorsByEmployeeName("TEST")).willReturn(employeeSupervisors);
 
-        val mapper = ObjectMapper()
-        val actualObj = mapper.readTree(entity.body)
+        val employeeSupervisorsResponse: EmployeeSupervisorsResponse? = employeeController.getEmployeeSupervisorsByName("TEST");
 
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.NOT_FOUND);
-        Assertions.assertThat(actualObj.get("message").textValue()).isEqualTo("Resource Not Found");
-        Assertions.assertThat(actualObj.get("errors")[0].textValue()).isEqualTo("Employee not found TET_EMPLOYEE");
+        Assertions.assertNotNull(employeeSupervisorsResponse)
+        Mockito.verify(employeeService, Mockito.times(1)).getEmployeeSupervisorsByEmployeeName("TEST")
+        Mockito.verifyNoMoreInteractions(employeeService)
     }
 
     @Test
-    fun badFormatRequestTest() {
+    fun getEmployeeSupervisorsNotFoundTest() {
+        val employeeSupervisors: EmployeeSupervisorsResponse? = Mockito.mock(EmployeeSupervisorsResponse::class.java)
 
-        val payloadBody: String = buildStringFromJsonFile(badFormatFileRequestPath)
+        given(employeeService.getEmployeeSupervisorsByEmployeeName("NOT_FOUND_EMPLOYEE")).willReturn(null);
 
-        val request = buildJsonStringRequestBody(payloadBody);
+        val exceptionResponse = assertThrows(ResourceNotFoundException::class.java) {
+            employeeController.getEmployeeSupervisorsByName("NOT_FOUND_EMPLOYEE");
+        }
 
-        val entity = restTemplate.postForEntity<String>("/employee/processEmployeesHierarchy", request, String::class.java)
-
-        Assertions.assertThat(entity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
-        Assertions.assertThat(entity.body).isEqualTo("Invalid JSON Format");
+        Assertions.assertEquals("Employee not found NOT_FOUND_EMPLOYEE", exceptionResponse.message)
+        Mockito.verify(employeeService, Mockito.times(1)).getEmployeeSupervisorsByEmployeeName("NOT_FOUND_EMPLOYEE")
+        Mockito.verifyNoMoreInteractions(employeeService)
     }
 
-    private fun buildStringFromJsonFile(pathFile: Path): String{
-        return Files.lines(pathFile)
-                .parallel()
-                .collect(Collectors.joining())
-    }
+    private fun getEmployeeHierarchyRequest(): EmployeeHierarchyRequest {
+        val employeeHierarchyRequest: EmployeeHierarchyRequest = EmployeeHierarchyRequest()
+        employeeHierarchyRequest.employeesMap = LinkedHashMap()
 
-    private fun buildJsonStringRequestBody(payloadBody: String): HttpEntity<String>{
-        val headers: HttpHeaders = HttpHeaders ()
-        headers.contentType = MediaType.APPLICATION_JSON
-
-        return HttpEntity<String>(payloadBody, headers)
+        return employeeHierarchyRequest
     }
 
 }

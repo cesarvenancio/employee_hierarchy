@@ -41,3 +41,23 @@ tasks.withType<KotlinCompile> {
 	}
 }
 
+sourceSets {
+	create("integrationTest") {
+		kotlin {
+			compileClasspath += main.get().output + configurations.testRuntimeClasspath
+			runtimeClasspath += output + compileClasspath
+		}
+	}
+}
+
+val integrationTest = task<Test>("integrationTest") {
+	description = "Runs the integration tests"
+	group = "verification"
+	testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+	classpath = sourceSets["integrationTest"].runtimeClasspath
+	mustRunAfter(tasks["test"])
+}
+
+tasks.check {
+	dependsOn(integrationTest)
+}

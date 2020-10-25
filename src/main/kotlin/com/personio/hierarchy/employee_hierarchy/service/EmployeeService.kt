@@ -1,6 +1,5 @@
 package com.personio.hierarchy.employee_hierarchy.service
 
-import com.personio.hierarchy.employee_hierarchy.exception.ResourceNotFoundException
 import com.personio.hierarchy.employee_hierarchy.model.entity.Employee
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeHierarchyResponse
 import com.personio.hierarchy.employee_hierarchy.model.response.EmployeeNode
@@ -19,7 +18,7 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
 
         var rootEmployeeNode: EmployeeNode? = null;
 
-        validateHierarchy(employeeHierarchyMap, response);
+        response.validationMessages.addAll(validateHierarchy(employeeHierarchyMap));
 
         for ((employeeName, supervisorListName) in employeeHierarchyMap) {
 
@@ -58,7 +57,9 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         return  response;
     }
 
-    fun validateHierarchy(employeeHierarchyMap: LinkedHashMap<String, MutableList<String>>, response: EmployeeHierarchyResponse) {
+    private fun validateHierarchy(employeeHierarchyMap: LinkedHashMap<String, MutableList<String>>):ArrayList<String> {
+
+        val validationMessages:ArrayList<String> = arrayListOf<String>()
 
         for ((employeeName, supervisorListName) in employeeHierarchyMap) {
 
@@ -67,7 +68,7 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
             if (supervisorListName.size > 1) {
                 for (supervisors in supervisorListName) {
                     if(supervisors == supervisorName) continue;
-                    response.validationMessages?.add(
+                    validationMessages.add(
                             "Could not link the employee " +
                                     "$employeeName to supervisor $supervisors, employee already linked to supervisor $supervisorName"
                     )
@@ -75,27 +76,27 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
             }
 
             if (employeeName == supervisorName) {
-                response.validationMessages?.add("Employee and supervisor have the same name - $supervisorName")
+                validationMessages.add("Employee and supervisor have the same name - $supervisorName")
                 employeeHierarchyMap.remove(employeeName);
             }
 
             if (supervisorName == "") {
-                response.validationMessages?.add("Empty value for supervisor in employee - $employeeName")
+                validationMessages.add("Empty value for supervisor in employee - $employeeName")
                 employeeHierarchyMap.remove(employeeName);
             }
         }
+
+        return validationMessages
     }
 
     @Transactional
     fun saveEmployeeHierarchy(rootEmployeeNodeResponse: EmployeeNode?){
+        employeeRepository.truncateEmployeeTable()
+
         saveEmployeeNode(rootEmployeeNodeResponse, null);
     }
 
     private fun saveEmployeeNode(rootEmployeeNodeResponse: EmployeeNode?, supervisorId: Long?){
-
-        if(supervisorId == null){
-            employeeRepository.truncateEmployeeTable()
-        }
 
         if(rootEmployeeNodeResponse != null){
             val employee: Employee = employeeRepository.save(Employee(null, rootEmployeeNodeResponse.name, supervisorId));
@@ -108,24 +109,16 @@ class EmployeeService @Autowired constructor(private val employeeRepository: Emp
         }
     }
 
-    fun getEmployee(name:String): Employee?{
-
+    fun getEmployeeByName(name:String): Employee?{
         var employee: Employee? =  employeeRepository.findByName(name);
 
         return employee;
     }
 
-    fun getEmployeeSupervisors(name:String): EmployeeSupervisorsResponse? {
-
+    fun getEmployeeSupervisorsByEmployeeName(name:String): EmployeeSupervisorsResponse? {
         var employee: EmployeeSupervisorsResponse? = employeeRepository.findSupervisorsByEmployeeName(name);
 
-        if(employee != null){
-            return employee;
-        }else{
-            throw ResourceNotFoundException("Employee not found $name");
-        }
-
-        return null;
+        return employee;
     }
 
 }

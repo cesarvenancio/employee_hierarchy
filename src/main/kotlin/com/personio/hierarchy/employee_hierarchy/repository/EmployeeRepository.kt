@@ -11,7 +11,7 @@ import javax.transaction.Transactional
 @Repository
 interface EmployeeRepository : CrudRepository<Employee, Long> {
 
-    fun findByName(name: String): Employee?
+    fun findByName(name: String?): Employee?
 
     @Query("SELECT " +
             "e.name as employee, supervisor.name as supervisor, supervisorOfSupervisor.name as supervisorOfSupervisor " +
@@ -19,7 +19,7 @@ interface EmployeeRepository : CrudRepository<Employee, Long> {
             "LEFT JOIN Employee supervisor on e.supervisor_id = supervisor.id " +
             "LEFT JOIN Employee supervisorOfSupervisor on supervisor.supervisor_id = supervisorOfSupervisor.id " +
             "WHERE e.name = ?1", nativeQuery = true)
-    fun findSupervisorsByEmployeeName(name: String): EmployeeSupervisorsResponse?
+    fun findSupervisorsByEmployeeName(name: String?): EmployeeSupervisorsResponse?
 
     @Transactional
     @Modifying
