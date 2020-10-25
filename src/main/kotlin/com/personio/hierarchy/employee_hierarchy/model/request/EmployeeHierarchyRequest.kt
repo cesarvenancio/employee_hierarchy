@@ -9,15 +9,15 @@ class EmployeeHierarchyRequest {
     var employeesMap: LinkedHashMap<String, MutableList<String>> = LinkedHashMap()
 
     @JsonAnySetter
-    fun duplicateKeyValues(key: String, value: String) {
+    fun buildEmployeeHierarchyMap(employee: String, supervisor: String) {
         var values: MutableList<String>? = null
-        if (!employeesMap.containsKey(key)) {
+        if (!employeesMap.containsKey(employee)) {
             values = ArrayList()
         } else {
-            values = employeesMap.get(key)
+            values = employeesMap.get(employee)
         }
-        values!!.add(value)
-        employeesMap.put(key, values)
+        values!!.add(supervisor.trim())
+        employeesMap.put(employee.trim(), values)
     }
 
 }

@@ -23,7 +23,7 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
 
     @GetMapping("/{name}")
     fun getEmployeeByName(@PathVariable name:String): Employee? {
-        var employee:Employee? = employeeService.getEmployeeByName(name);
+        var employee:Employee? = employeeService.getEmployeeByName(name.trim());
 
         if(employee != null){
             return employee;
@@ -35,7 +35,7 @@ class EmployeeController @Autowired constructor(private val employeeService: Emp
     @GetMapping("/{name}/supervisor")
     fun getEmployeeSupervisorsByName(@PathVariable name:String): EmployeeSupervisorsResponse? {
 
-        var employeeSupervisors:EmployeeSupervisorsResponse? = employeeService.getEmployeeSupervisorsByEmployeeName(name);
+        var employeeSupervisors:EmployeeSupervisorsResponse? = employeeService.getEmployeeSupervisorsByEmployeeName(name.trim());
 
         if(employeeSupervisors != null){
             return employeeSupervisors;
